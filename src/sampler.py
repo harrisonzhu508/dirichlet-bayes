@@ -22,9 +22,3 @@ class FiniteDirichlet:
 
     def run_chain(self):
         pass
-
-
-
-
-
-
