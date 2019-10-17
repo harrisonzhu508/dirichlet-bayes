@@ -107,3 +107,8 @@ venv.bak/
 env
 .env
 
+# other stuff i don't want
+.vscode
+.pyc
+.c
+
