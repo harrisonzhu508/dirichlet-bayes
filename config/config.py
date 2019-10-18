@@ -4,11 +4,9 @@ INFINITE_NORMAL_PARAMS = {
     "sample_freq": 10
 }
 
-INFINITE_NORMAL_PRIOR = {
-    "prior_init": { 
+INFINITE_NORMAL_HYPERPARAMETER = {
         "mu_0": 20,
         "sigma_0": 10,
         "alpha_0": 2,
         "beta_0": 1/9
     }
-}

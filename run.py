@@ -1,5 +1,10 @@
-def main():
-    pass
+import sys
+sys.path.append("..")
+from src.sampler import InfiniteNormalDirichlet
+import numpy as np
+from scipy.stats import norm
+from config.config import INFINITE_NORMAL_PARAMS, INFINITE_NORMAL_HYPERPARAMETER
 
-if __name__ == "__main__":
-    main()
+data = np.loadtxt("data/galaxy.txt")
+finiteDirichlet = InfiniteNormalDirichlet(INFINITE_NORMAL_PARAMS, INFINITE_NORMAL_HYPERPARAMETER, data)
+finiteDirichlet.run_chain()
