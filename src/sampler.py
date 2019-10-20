@@ -30,9 +30,9 @@ class InfiniteNormalDirichlet:
         self.data = data
 
         # create storage space of size O(num_samples) for chain
-        mu_chain = []
-        sigma_chain = []
-        weights = []
+        mu_chain = {}
+        sigma_chain = {}
+        weights = {}
         ## some extra storage for assignment at each time step
         ## we index from 0! So with K clusters we have 0...K-1
         ## this has storage O(num_datapoints * num_samples)
@@ -40,12 +40,9 @@ class InfiniteNormalDirichlet:
 
         # place initial parameters values into chain
         # take crude averages and standard deviation!
-        # TODO: this bit is tricky because the number of clusters if varying...
-        # we might get stackoverflow as the dimensions of cluster parameters grow
-        # this could be resolved through caching throughout the MCMC procedure
-        mu_chain.append(np.array([np.mean(data)]))
-        sigma_chain.append(np.array([np.std(data)]))
-        weights.append([np.array(self.params["alpha"])])  # initially we have 1 cluster!
+        mu_chain[0] = {0: np.mean(data)}
+        sigma_chain[0] = {0: np.std(data)}
+        weights[0] = {0: self.params["alpha"]}  # initially we have 1 cluster!
 
         self.chain = {
             "mu": mu_chain,
@@ -62,17 +59,18 @@ class InfiniteNormalDirichlet:
             logging.info("MCMC Chain: {}".format(i))
             # find the number of points in each clusters
             unique, counts = np.unique(
-                self.chain["assignments"][i, :], return_counts=True
+                self.chain["assignments"][i - 1, :], return_counts=True
             )
-            num_pts_clusters = dict(zip(unique, counts))
-            num_clusters = max(self.chain["assignments"][i, :]) + 1
+            num_pts_clusters = dict(zip([i for i in range(len(unique))], counts))
+            cluster_names = list(unique.copy())
 
             # initialise the arrays of the chain as the array lengths differ
             # as we increase the number of clusters
-            self.chain["mu"].append(np.zeros(num_clusters))
-            self.chain["sigma"].append(np.zeros(num_clusters))
-
-            for k in range(num_clusters):
+            self.chain["mu"][i] = {name: 0 for name in cluster_names}
+            self.chain["sigma"][i] = {name: 0 for name in cluster_names}
+            self.chain["weights"][i] = {name: 0 for name in cluster_names}
+            for k in cluster_names:
+                print(cluster_names, num_pts_clusters)
                 logging.info("MCMC Chain: {}, Cluster loop: {}".format(i, k))
                 num_pts_cluster = num_pts_clusters[k]
                 data_cluster = self.data[
@@ -99,26 +97,24 @@ class InfiniteNormalDirichlet:
                     # now sample sigma[k] given sigma[-k], mu and the partition
                     c = self.hyperparam["alpha_0"] + num_pts_cluster / 2
                     d = self.hyperparam["beta_0"] + 0.5 * sum(
-                        (data_cluster - self.chain["mu"][i - 1][k])
+                        (data_cluster - self.chain["mu"][i - 1][k]) ** 2
                     )
 
                     # update sigma
                     self.chain["sigma"][i][k] = 1 / np.sqrt(gamma(shape=c, scale=d))
 
-            self.chain["assignments"][i, :] = self.chain["assignments"][i - 1, :]
+            self.chain["assignments"][i, :] = self.chain["assignments"][i - 1, :].copy()
             # now, loop through all the datapoints to compute the new cluster probabilities
             for j in range(self.n):
                 logging.info("MCMC Chain: {}, Dataset index: {}".format(i, j))
-                num_pts_cluster_tmp = self.chain["assignments"].copy()
+
+                max_cluster_label = max(self.chain["assignments"][i, :]) + 1
                 cluster_assigned = self.chain["assignments"][i - 1, j].copy()
-                num_pts_cluster_tmp[cluster_assigned] = num_pts_clusters[
-                    cluster_assigned
-                ]
+                mu_chain = np.array(list(self.chain["mu"][i].values()))
+                sigma_chain = np.array(list(self.chain["sigma"][i].values()))
 
                 # probability for each existing k cluster -> gives a vector of probabilities
-                p_old_cluster = norm(self.chain["mu"][i], self.chain["sigma"][i]).pdf(
-                    self.data[j]
-                )
+                p_old_cluster = norm(mu_chain, sigma_chain).pdf(self.data[j])
                 mu_new = normal(
                     loc=self.hyperparam["mu_0"], scale=self.hyperparam["sigma_0"]
                 )
@@ -131,41 +127,50 @@ class InfiniteNormalDirichlet:
                 p_new_cluster = self.params["alpha"] * norm(mu_new, sigma_new).pdf(
                     self.data[j]
                 )
+                # logging.debug(p_old_cluster)
+                # logging.debug(p_new_cluster)
                 p_new_cluster = np.array([p_new_cluster])
                 # normlise the probabilities
                 prob_clusters = np.concatenate((p_new_cluster, p_old_cluster))
                 prob_clusters = prob_clusters / sum(prob_clusters)
-
                 # select a new cluster!
                 # if we get 0 then new cluster!
+                cluster_names_tmp = cluster_names.copy()
+                cluster_names_tmp.insert(0, max_cluster_label)
                 cluster_pick = np.random.choice(
-                    [num for num in range(num_clusters + 1)], p=prob_clusters
+                    cluster_names_tmp,
+                    p=prob_clusters,
                 )
-                if cluster_pick == 0:
-                    num_clusters = num_clusters + 1
-                    self.chain["assignments"][i, j] = num_clusters - 1
-                    self.chain["mu"][i] = np.concatenate(
-                        (self.chain["mu"][i], np.array([mu_new]))
-                    )
-                    self.chain["sigma"][i] = np.concatenate(
-                        (self.chain["sigma"][i], np.array([sigma_new]))
-                    )
-                    # obtain the number of members in the cluster belonging to the ith element, with
-                    # it removed!
-                    # find the number of points in each clusters as it will change with each iteration
-                    unique, counts = np.unique(
-                        self.chain["assignments"][i, :], return_counts=True
-                    )
-                    num_pts_clusters = dict(zip(unique, counts))
 
+                if cluster_pick == max_cluster_label:
+                    self.chain["assignments"][i, j] = cluster_pick
+                    
+                    cluster_names = cluster_names_tmp.copy()
+                    self.chain["mu"][i][cluster_pick] = mu_new
+                    self.chain["sigma"][i][cluster_pick] = sigma_new
                 else:
                     self.chain["assignments"][i, j] = cluster_pick
 
-            # now, sample the cluster weights!
-            weights_new = dirichlet(
-                alpha=self.params["alpha"] + np.array(list(num_pts_clusters.values()))
-            )
-            self.chain["weights"].append(weights_new)
+                # obtain the number of members in the cluster belonging to the ith element, with
+                # it removed!
+                # find the number of points in each clusters as it will change with each iteration
+                # remove empty clusters and their parameters
+                # now, sample the cluster weights!
+                unique, counts = np.unique(
+                    self.chain["assignments"][i, :], return_counts=True
+                )
+                num_pts_clusters = dict(zip(unique, counts))
+                if cluster_assigned not in num_pts_clusters.keys():
+                    del self.chain["mu"][i][cluster_assigned]
+                    del self.chain["sigma"][i][cluster_assigned]
+                    del self.chain["weights"][i][cluster_assigned]
+                    cluster_names.remove(cluster_assigned)
+            
+            weights_new = dirichlet(alpha=self.params["alpha"] + np.array(list(num_pts_clusters.values())))
+            l = 0
+            for key in num_pts_clusters.keys():
+                self.chain["weights"][i][key] = weights_new[l]
+                l += 1
 
         print("Complete sampling")
 
