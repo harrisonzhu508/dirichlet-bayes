@@ -60,8 +60,8 @@ class InfiniteNormalDirichlet:
             unique, counts = np.unique(
                 self.chain["assignments"][i - 1, :], return_counts=True
             )
-            num_pts_clusters = dict(zip([i for i in range(len(unique))], counts))
             cluster_names = list(unique.copy())
+            num_pts_clusters = dict(zip(unique, counts))
 
             # initialise the arrays of the chain as the array lengths differ
             # as we increase the number of clusters
@@ -69,7 +69,6 @@ class InfiniteNormalDirichlet:
             self.chain["sigma"][i] = {name: 0 for name in cluster_names}
             self.chain["weights"][i] = {name: 0 for name in cluster_names}
             for k in cluster_names:
-                print(cluster_names, num_pts_clusters)
                 logging.info("MCMC Chain: {}, Cluster loop: {}".format(i, k))
                 num_pts_cluster = num_pts_clusters[k]
                 data_cluster = self.data[

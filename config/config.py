@@ -4,7 +4,7 @@ ROOT = Path(__file__).resolve().parents[1]
 out_dir = path.join(ROOT, "results")
 
 INFINITE_NORMAL_PARAMS = {
-    "num_samples": 10000,
+    "num_samples": 10,
     "alpha": 1,
     "sample_freq": 10,
     "out_dir": out_dir
