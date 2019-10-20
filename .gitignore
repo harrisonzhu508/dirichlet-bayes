@@ -111,4 +111,4 @@ env
 .vscode
 .pyc
 .c
-
+*.pkl
