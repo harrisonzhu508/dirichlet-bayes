@@ -1,5 +1,3 @@
-import sys
-sys.path.append("..")
 from src.sampler import InfiniteNormalDirichlet
 import numpy as np
 from scipy.stats import norm
