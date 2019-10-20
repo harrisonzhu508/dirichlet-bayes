@@ -2,6 +2,8 @@ import numpy as np
 from numpy.random import normal, gamma, dirichlet
 from scipy.stats import norm
 import logging
+import pickle
+from os import path
 
 logging.basicConfig(filename="logs/sampler_test.log", level=logging.DEBUG)
 
@@ -70,7 +72,6 @@ class InfiniteNormalDirichlet:
             self.chain["sigma"][i] = {name: 0 for name in cluster_names}
             self.chain["weights"][i] = {name: 0 for name in cluster_names}
             for k in cluster_names:
-                print(cluster_names, num_pts_clusters)
                 logging.info("MCMC Chain: {}, Cluster loop: {}".format(i, k))
                 num_pts_cluster = num_pts_clusters[k]
                 data_cluster = self.data[
@@ -137,14 +138,11 @@ class InfiniteNormalDirichlet:
                 # if we get 0 then new cluster!
                 cluster_names_tmp = cluster_names.copy()
                 cluster_names_tmp.insert(0, max_cluster_label)
-                cluster_pick = np.random.choice(
-                    cluster_names_tmp,
-                    p=prob_clusters,
-                )
+                cluster_pick = np.random.choice(cluster_names_tmp, p=prob_clusters)
 
                 if cluster_pick == max_cluster_label:
                     self.chain["assignments"][i, j] = cluster_pick
-                    
+
                     cluster_names = cluster_names_tmp.copy()
                     self.chain["mu"][i][cluster_pick] = mu_new
                     self.chain["sigma"][i][cluster_pick] = sigma_new
@@ -161,16 +159,25 @@ class InfiniteNormalDirichlet:
                 )
                 num_pts_clusters = dict(zip(unique, counts))
                 if cluster_assigned not in num_pts_clusters.keys():
+                    print(cluster_assigned, num_pts_clusters.keys())
                     del self.chain["mu"][i][cluster_assigned]
                     del self.chain["sigma"][i][cluster_assigned]
                     del self.chain["weights"][i][cluster_assigned]
                     cluster_names.remove(cluster_assigned)
-            
-            weights_new = dirichlet(alpha=self.params["alpha"] + np.array(list(num_pts_clusters.values())))
+
+            weights_new = dirichlet(
+                alpha=self.params["alpha"] + np.array(list(num_pts_clusters.values()))
+            )
             l = 0
             for key in num_pts_clusters.keys():
                 self.chain["weights"][i][key] = weights_new[l]
                 l += 1
+
+            pickle_out = open(
+                path.join(self.params["out_dir"], "chain_iter.pkl".format(i)), "wb"
+            )
+            pickle.dump(self.chain, pickle_out)
+            pickle_out.close()
 
         print("Complete sampling")
 
