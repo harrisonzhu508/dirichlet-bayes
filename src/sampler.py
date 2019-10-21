@@ -54,6 +54,7 @@ class InfiniteNormalDirichlet:
         """
         for i in range(1, self.params["num_samples"] + 1):
             logging.info("MCMC Chain: {}".format(i))
+
             # find the number of points in each clusters
             unique, counts = np.unique(self.assignments[i - 1, :], return_counts=True)
             cluster_names = list(unique.copy())
@@ -93,7 +94,7 @@ class InfiniteNormalDirichlet:
                     )
 
                     # update sigma
-                    self.chain["sigma"][i][k] = 1 / np.sqrt(gamma(shape=c, scale=1/d))
+                    self.chain["sigma"][i][k] = 1 / np.sqrt(gamma(shape=c, scale=1 / d))
 
             self.assignments[i, :] = self.assignments[i - 1, :].copy()
             # now, loop through all the datapoints to compute the new cluster probabilities
@@ -104,14 +105,17 @@ class InfiniteNormalDirichlet:
                 num_pts_clusters = dict(zip(unique, counts))
 
                 cluster_assigned = self.assignments[i, j].copy()
-                
+                num_pts_clusters[cluster_assigned] += -1
+
                 mu_chain = np.array(list(self.chain["mu"][i].values()))
                 sigma_chain = np.array(list(self.chain["sigma"][i].values()))
 
                 new_cluster_label = max(self.assignments[i, :]) + 1
 
                 # probability for each existing k cluster -> gives a vector of probabilities
-                p_old_cluster = np.array(list(num_pts_clusters.values())) * norm(mu_chain, sigma_chain).pdf(self.data[j])
+                p_old_cluster = np.array(list(num_pts_clusters.values())) * norm(
+                    mu_chain, sigma_chain
+                ).pdf(self.data[j])
                 mu_new = normal(
                     loc=self.hyperparam["mu_0"], scale=self.hyperparam["sigma_0"]
                 )
@@ -152,7 +156,9 @@ class InfiniteNormalDirichlet:
                 # now, sample the cluster weights!
                 unique, counts = np.unique(self.assignments[i, :], return_counts=True)
                 num_pts_clusters = dict(zip(unique, counts))
-                if cluster_assigned not in num_pts_clusters.keys():
+                if (cluster_assigned not in num_pts_clusters.keys()) & (
+                    cluster_pick != cluster_assigned
+                ):
                     del self.chain["mu"][i][cluster_assigned]
                     del self.chain["sigma"][i][cluster_assigned]
                     del self.chain["weights"][i][cluster_assigned]
@@ -166,16 +172,10 @@ class InfiniteNormalDirichlet:
                 self.chain["weights"][i][key] = weights_new[l]
                 l += 1
 
-            if i % self.params["sample_freq"] == 0:
-                with open(
-                    path.join(self.params["out_dir"], "chain_iter.pkl"), "wb"
-                ) as f:
-                    pickle.dump(self.chain, f)
+        with open(path.join(self.params["out_dir"], "chain_iter.pkl"), "wb") as f:
+            pickle.dump(self.chain, f)
 
-                np.save(
-                    path.join(self.params["out_dir"], "assignments.npy"),
-                    self.assignments
-                )
+        np.save(path.join(self.params["out_dir"], "assignments.npy"), self.assignments)
 
         print("Complete sampling")
 
@@ -186,14 +186,14 @@ if __name__ == "__main__":
     import os
     import sys
 
-    sys.path.append(os.path.abspath('.'))
+    sys.path.append(os.path.abspath("."))
 
     import numpy as np
     from scipy.stats import norm
     from config.config import INFINITE_NORMAL_PARAMS, INFINITE_NORMAL_HYPERPARAMETER
 
     data = np.loadtxt("data/galaxy.txt")
-    finiteDirichlet = InfiniteNormalDirichlet(INFINITE_NORMAL_PARAMS, INFINITE_NORMAL_HYPERPARAMETER, data)
+    finiteDirichlet = InfiniteNormalDirichlet(
+        INFINITE_NORMAL_PARAMS, INFINITE_NORMAL_HYPERPARAMETER, data
+    )
     finiteDirichlet.run_chain()
-
-678678678678
