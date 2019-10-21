@@ -161,7 +161,7 @@ class InfiniteNormalDirichlet:
                 self.chain["weights"][i][key] = weights_new[l]
                 l += 1
 
-            if i % 10 == 0:
+            if i % self.params["sample_freq"] == 0:
                 with open(
                     path.join(self.params["out_dir"], "chain_iter.pkl".format(i)), "wb"
                 ) as f:
