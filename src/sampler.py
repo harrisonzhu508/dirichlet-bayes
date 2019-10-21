@@ -89,31 +89,36 @@ class InfiniteNormalDirichlet:
                     # now sample sigma[k] given sigma[-k], mu and the partition
                     c = self.hyperparam["alpha_0"] + num_pts_cluster / 2
                     d = self.hyperparam["beta_0"] + 0.5 * sum(
-                        (data_cluster - self.chain["mu"][i - 1][k]) ** 2
+                        (data_cluster - self.chain["mu"][i][k]) ** 2
                     )
 
                     # update sigma
-                    self.chain["sigma"][i][k] = 1 / np.sqrt(gamma(shape=c, scale=d))
+                    self.chain["sigma"][i][k] = 1 / np.sqrt(gamma(shape=c, scale=1/d))
 
             self.assignments[i, :] = self.assignments[i - 1, :].copy()
             # now, loop through all the datapoints to compute the new cluster probabilities
             for j in range(self.n):
                 logging.info("MCMC Chain: {}, Dataset index: {}".format(i, j))
 
-                max_cluster_label = max(self.assignments[i, :]) + 1
-                cluster_assigned = self.assignments[i - 1, j].copy()
+                unique, counts = np.unique(self.assignments[i, :], return_counts=True)
+                num_pts_clusters = dict(zip(unique, counts))
+
+                cluster_assigned = self.assignments[i, j].copy()
+                
                 mu_chain = np.array(list(self.chain["mu"][i].values()))
                 sigma_chain = np.array(list(self.chain["sigma"][i].values()))
 
+                new_cluster_label = max(self.assignments[i, :]) + 1
+
                 # probability for each existing k cluster -> gives a vector of probabilities
-                p_old_cluster = norm(mu_chain, sigma_chain).pdf(self.data[j])
+                p_old_cluster = np.array(list(num_pts_clusters.values())) * norm(mu_chain, sigma_chain).pdf(self.data[j])
                 mu_new = normal(
                     loc=self.hyperparam["mu_0"], scale=self.hyperparam["sigma_0"]
                 )
                 sigma_new = 1 / np.sqrt(
                     gamma(
                         shape=self.hyperparam["alpha_0"],
-                        scale=self.hyperparam["beta_0"],
+                        scale=1 / self.hyperparam["beta_0"],
                     )
                 )
                 p_new_cluster = self.params["alpha"] * norm(mu_new, sigma_new).pdf(
@@ -128,10 +133,10 @@ class InfiniteNormalDirichlet:
                 # select a new cluster!
                 # if we get 0 then new cluster!
                 cluster_names_tmp = cluster_names.copy()
-                cluster_names_tmp.insert(0, max_cluster_label)
+                cluster_names_tmp.insert(0, new_cluster_label)
                 cluster_pick = np.random.choice(cluster_names_tmp, p=prob_clusters)
 
-                if cluster_pick == max_cluster_label:
+                if cluster_pick == new_cluster_label:
                     self.assignments[i, j] = cluster_pick
 
                     cluster_names = cluster_names_tmp.copy()
@@ -163,12 +168,12 @@ class InfiniteNormalDirichlet:
 
             if i % self.params["sample_freq"] == 0:
                 with open(
-                    path.join(self.params["out_dir"], "chain_iter.pkl".format(i)), "wb"
+                    path.join(self.params["out_dir"], "chain_iter.pkl"), "wb"
                 ) as f:
                     pickle.dump(self.chain, f)
 
                 np.save(
-                    path.join(self.params["out_dir"], "assignments.npy".format(i)),
+                    path.join(self.params["out_dir"], "assignments.npy"),
                     self.assignments
                 )
 
@@ -177,9 +182,17 @@ class InfiniteNormalDirichlet:
         return self.chain
 
 
-def test():
-    pass
-
-
 if __name__ == "__main__":
-    test()
+    import os
+    import sys
+
+    sys.path.append(os.path.abspath('.'))
+
+    import numpy as np
+    from scipy.stats import norm
+    from config.config import INFINITE_NORMAL_PARAMS, INFINITE_NORMAL_HYPERPARAMETER
+
+    data = np.loadtxt("data/galaxy.txt")
+    finiteDirichlet = InfiniteNormalDirichlet(INFINITE_NORMAL_PARAMS, INFINITE_NORMAL_HYPERPARAMETER, data)
+    finiteDirichlet.run_chain()
+
