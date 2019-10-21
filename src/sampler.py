@@ -196,3 +196,4 @@ if __name__ == "__main__":
     finiteDirichlet = InfiniteNormalDirichlet(INFINITE_NORMAL_PARAMS, INFINITE_NORMAL_HYPERPARAMETER, data)
     finiteDirichlet.run_chain()
 
+678678678678
