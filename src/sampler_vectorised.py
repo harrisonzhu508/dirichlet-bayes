@@ -115,6 +115,8 @@ class InfiniteNormalDirichlet:
                 old_cluster_assigned = int(self.assignments[i, j])
                 old_counts[old_cluster_assigned] -= 1
 
+                K = len(old_unique)
+
                 # probability for each existing k cluster -> gives a vector of probabilities
                 p_old_cluster = np.array(old_counts) * norm(
                     mu_new, sigma_new
@@ -136,15 +138,13 @@ class InfiniteNormalDirichlet:
                 # logging.debug(p_new_cluster)
                 p_new_cluster = np.array([p_new_cluster])
                 # normlise the probabilities
-                prob_clusters = np.concatenate((p_new_cluster, p_old_cluster))
+                prob_clusters = np.concatenate((p_old_cluster, p_new_cluster))
                 prob_clusters = prob_clusters / sum(prob_clusters)
                 # select a new cluster!
                 # if we get 0 then new cluster!
-                cluster_names_tmp = old_unique.copy() + 1
-                cluster_names_tmp = np.append([0], cluster_names_tmp)
                 # try:
                 cluster_pick = np.random.choice(
-                    cluster_names_tmp, p=prob_clusters)
+                    K+1, p=prob_clusters)
                 # except Exception as e:
                 #     logging.info("Iteration {}, datapoint {}".format(i, j))
                 #     logging.info("{}".format(sigma_new),
@@ -154,17 +154,14 @@ class InfiniteNormalDirichlet:
                 #                      mu_new, sigma_new),
                 #                  "\n with probabilities: {}".format(prob_clusters))
 
-                if cluster_pick == 0:
-                    self.assignments[i, :] = self.assignments[i, :] + 1
+                if cluster_pick == K:
                     self.assignments[i, j] = cluster_pick
-                    shifted_old_cluster_assigned = old_cluster_assigned + 1
                     # update the indices and shift the parameters up the list
-                    mu_new = np.append(mu_update, mu_new)
-                    sigma_new = np.append(sigma_update, sigma_new)
+                    mu_new = np.append(mu_new, mu_update)
+                    sigma_new = np.append(sigma_new, sigma_update)
 
                 else:
-                    self.assignments[i, j] = cluster_pick - 1
-                    shifted_old_cluster_assigned = old_cluster_assigned
+                    self.assignments[i, j] = cluster_pick
 
                 # obtain the number of members in the cluster belonging to the ith element, with
                 # it removed!
@@ -175,11 +172,11 @@ class InfiniteNormalDirichlet:
 
                 # remove empty clusters and their parameters
                 # now, sample the cluster weights!
-                if (old_counts[old_cluster_assigned] == 0) & (cluster_pick - 1 != shifted_old_cluster_assigned):
-                    mu_new = np.delete(mu_new, old_cluster_assigned + 1)
-                    sigma_new = np.delete(sigma_new, old_cluster_assigned + 1)
+                if (old_counts[old_cluster_assigned] == 0) & (cluster_pick != old_cluster_assigned):
+                    mu_new = np.delete(mu_new, old_cluster_assigned)
+                    sigma_new = np.delete(sigma_new, old_cluster_assigned)
 
-                    ind = self.assignments[i, :] >= (old_cluster_assigned + 1)
+                    ind = self.assignments[i, :] > (old_cluster_assigned)
                     self.assignments[i, ind] = self.assignments[i, ind] - 1
 
             # update the weights
