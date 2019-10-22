@@ -61,9 +61,9 @@ class InfiniteNormalDirichlet:
 
             # initialise the arrays of the chain as the array lengths differ
             # as we increase the number of clusters
-            mu_new = np.array([0 for name in unique])
-            sigma_new = np.array([0 for name in unique])
-            weights_new = np.array([0 for name in unique])
+            mu_new = np.array([0 for name in unique], dtype = np.float32)
+            sigma_new = np.array([0 for name in unique], dtype = np.float32)
+            weights_new = np.array([0 for name in unique], dtype = np.float32)
 
             mu_old = self.chain["mu"][i - 1]
             sigma_old = self.chain["sigma"][i - 1]
@@ -98,12 +98,11 @@ class InfiniteNormalDirichlet:
                     )
 
                     # update sigma
-                    sigma_new[k] = 1 / np.sqrt(gamma(shape=c, scale=1 / d))
+                    sigma_new[k] = 1. / np.sqrt(gamma(shape=c, scale=1 / d))
 
             self.assignments[i, :] = self.assignments[i - 1, :].copy()
             # now, loop through all the datapoints to compute the new cluster probabilities
             for j in range(self.n):
-                print("MCMC Chain: {}, Dataset index: {}".format(i, j))
 
                 # TODO: this bit could definitely be taken out in the future, but i
                 # will just leave it for now
