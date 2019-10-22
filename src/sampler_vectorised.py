@@ -43,7 +43,7 @@ class InfiniteNormalDirichlet:
         # take crude averages and standard deviation!
         mu_chain.append([np.mean(data)])
         sigma_chain.append([np.std(data)])
-        weights.append(self.params["alpha"])  # initially we have 1 cluster!
+        weights.append([1])  # initially we have 1 cluster!
 
         self.chain = {"mu": mu_chain, "sigma": sigma_chain, "weights": weights}
 
@@ -54,18 +54,18 @@ class InfiniteNormalDirichlet:
         self.assignments = z_chain
 
         for i in range(1, steps):
-            print("MCMC Chain: {}".format(i))
+            if i % 50 == 0: print("MCMC Chain: {}".format(i))
             # find the number of points in each clusters
             old_unique, old_counts = np.unique(
                 self.assignments[i - 1, :], return_counts=True)
             num_pts_clusters = dict(zip(old_unique, old_counts))
-            old_unique = list(old_unique)
+            # old_unique = list(old_unique)
 
             # initialise the arrays of the chain as the array lengths differ
             # as we increase the number of clusters
-            mu_new = np.array([0 for name in old_unique], dtype=np.float32)
-            sigma_new = np.array([0 for name in old_unique], dtype=np.float32)
-            weights_new = np.array([0 for name in old_unique], dtype=np.float32)
+            mu_new = np.zeros(old_unique.shape)
+            sigma_new = np.zeros(old_unique.shape)
+            weights_new = np.zeros(old_unique.shape)
 
             mu_old = self.chain["mu"][i - 1]
             sigma_old = self.chain["sigma"][i - 1]
@@ -118,7 +118,7 @@ class InfiniteNormalDirichlet:
                 K = len(old_unique)
 
                 # probability for each existing k cluster -> gives a vector of probabilities
-                p_old_cluster = np.array(old_counts) * norm(
+                p_old_cluster = old_counts * norm(
                     mu_new, sigma_new
                 ).pdf(self.data[j])
 
@@ -136,12 +136,12 @@ class InfiniteNormalDirichlet:
                 ).pdf(self.data[j])
                 # logging.debug(p_old_cluster)
                 # logging.debug(p_new_cluster)
-                p_new_cluster = np.array([p_new_cluster])
+                p_new_cluster = np.atleast_1d(p_new_cluster)
                 # normlise the probabilities
                 prob_clusters = np.concatenate((p_old_cluster, p_new_cluster))
                 prob_clusters = prob_clusters / sum(prob_clusters)
                 # select a new cluster!
-                # if we get 0 then new cluster!
+                # if we get K then new cluster!
                 # try:
                 cluster_pick = np.random.choice(
                     K+1, p=prob_clusters)
@@ -190,15 +190,9 @@ class InfiniteNormalDirichlet:
             self.chain["sigma"].append(sigma_new)
             self.chain["weights"].append(weights_new)
 
-        with open(path.join(self.params["out_dir"], "chain_iter.pkl"), "wb") as f:
-            pickle.dump(self.chain, f)
-
-        np.save(path.join(self.params["out_dir"],
-                          "assignments.npy"), self.assignments)
-
         print("Complete sampling")
 
-        return self.chain
+        return self.chain, self.assignments
 
 
 if __name__ == "__main__":
@@ -217,4 +211,4 @@ if __name__ == "__main__":
     finiteDirichlet = InfiniteNormalDirichlet(
         INFINITE_NORMAL_PARAMS, INFINITE_NORMAL_HYPERPARAMETER, data
     )
-    finiteDirichlet.run_chain(1000)
+    finiteDirichlet.run_chain(10000)

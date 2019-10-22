@@ -4,8 +4,17 @@ import numpy as np
 
 from src.plot import *
 
+# Load data from file
 assignments = np.load('results/assignments.npy')
 mus, sigmas, weights = pickle.load(open('results/chain_iter.pkl', 'rb'))
+
+# Thin the samples to reduce correlation
+thin_factor = 10
+
+assignments = assignments[0::thin_factor]
+mus = mus[0::thin_factor]
+sigmas = sigmas[0::thin_factor]
+weights = sigmas[0::thin_factor]
 
 Nsamp = assignments.shape[0]
 nd = assignments.shape[1]
