@@ -43,7 +43,7 @@ class InfiniteNormalDirichlet:
         # take crude averages and standard deviation!
         mu_chain.append([np.mean(data)])
         sigma_chain.append([np.std(data)])
-        weights.append(self.params["alpha"])  # initially we have 1 cluster!
+        weights.append([self.params["alpha"]])  # initially we have 1 cluster!
 
         self.chain = {"mu": mu_chain, "sigma": sigma_chain, "weights": weights}
 
@@ -53,11 +53,12 @@ class InfiniteNormalDirichlet:
         z_chain = np.zeros((steps + 1, self.n), dtype=int)
         self.assignments = z_chain
 
-        for i in range(1, steps):
+        for i in range(1, steps + 1):
             print("MCMC Chain: {}".format(i))
             # find the number of points in each clusters
             old_unique, old_counts = np.unique(
-                self.assignments[i - 1, :], return_counts=True)
+                self.assignments[i - 1, :], return_counts=True
+            )
             num_pts_clusters = dict(zip(old_unique, old_counts))
             old_unique = list(old_unique)
 
@@ -73,8 +74,7 @@ class InfiniteNormalDirichlet:
 
             for k in old_unique:
                 num_pts_cluster = num_pts_clusters[k]
-                data_cluster = self.data[np.where(
-                    self.assignments[i - 1, :] == k)[0]]
+                data_cluster = self.data[np.where(self.assignments[i - 1, :] == k)[0]]
                 if num_pts_cluster > 0:
                     # now sample mu[k] given mu[-k], sigma and the partition
                     # see lecture 15 last slide calculations N(a, b) trick
@@ -88,8 +88,7 @@ class InfiniteNormalDirichlet:
                     )
                     a = b ** 2 * (
                         sum(data_cluster) / sigma_tmp ** 2
-                        + self.hyperparam["mu_0"] /
-                        self.hyperparam["sigma_0"] ** 2
+                        + self.hyperparam["mu_0"] / self.hyperparam["sigma_0"] ** 2
                     )
                     # update mu
                     mu_new[k] = normal(loc=a, scale=b)
@@ -101,7 +100,7 @@ class InfiniteNormalDirichlet:
                     )
 
                     # update sigma
-                    sigma_new[k] = 1. / np.sqrt(gamma(shape=c, scale=1 / d))
+                    sigma_new[k] = 1.0 / np.sqrt(gamma(shape=c, scale=1 / d))
 
             self.assignments[i, :] = self.assignments[i - 1, :].copy()
             # now, loop through all the datapoints to compute the new cluster probabilities
@@ -110,7 +109,8 @@ class InfiniteNormalDirichlet:
                 # TODO: this bit could definitely be taken out in the future, but i
                 # will just leave it for now
                 old_unique, old_counts = np.unique(
-                    self.assignments[i, :], return_counts=True)
+                    self.assignments[i, :], return_counts=True
+                )
 
                 old_cluster_assigned = int(self.assignments[i, j])
                 old_counts[old_cluster_assigned] -= 1
@@ -118,9 +118,9 @@ class InfiniteNormalDirichlet:
                 K = len(old_unique)
 
                 # probability for each existing k cluster -> gives a vector of probabilities
-                p_old_cluster = np.array(old_counts) * norm(
-                    mu_new, sigma_new
-                ).pdf(self.data[j])
+                p_old_cluster = np.array(old_counts) * norm(mu_new, sigma_new).pdf(
+                    self.data[j]
+                )
 
                 mu_update = normal(
                     loc=self.hyperparam["mu_0"], scale=self.hyperparam["sigma_0"]
@@ -143,8 +143,7 @@ class InfiniteNormalDirichlet:
                 # select a new cluster!
                 # if we get 0 then new cluster!
                 # try:
-                cluster_pick = np.random.choice(
-                    K+1, p=prob_clusters)
+                cluster_pick = np.random.choice(K + 1, p=prob_clusters)
                 # except Exception as e:
                 #     logging.info("Iteration {}, datapoint {}".format(i, j))
                 #     logging.info("{}".format(sigma_new),
@@ -172,7 +171,9 @@ class InfiniteNormalDirichlet:
 
                 # remove empty clusters and their parameters
                 # now, sample the cluster weights!
-                if (old_counts[old_cluster_assigned] == 0) & (cluster_pick != old_cluster_assigned):
+                if (old_counts[old_cluster_assigned] == 0) & (
+                    cluster_pick != old_cluster_assigned
+                ):
                     mu_new = np.delete(mu_new, old_cluster_assigned)
                     sigma_new = np.delete(sigma_new, old_cluster_assigned)
 
@@ -181,8 +182,7 @@ class InfiniteNormalDirichlet:
 
             # update the weights
             weights_update = dirichlet(
-                alpha=self.params["alpha"]
-                + np.array(list(num_pts_clusters.values()))
+                alpha=self.params["alpha"] + np.array(list(num_pts_clusters.values()))
             )
             weights_new = weights_update.copy()
 
@@ -193,8 +193,7 @@ class InfiniteNormalDirichlet:
         with open(path.join(self.params["out_dir"], "chain_iter.pkl"), "wb") as f:
             pickle.dump(self.chain, f)
 
-        np.save(path.join(self.params["out_dir"],
-                          "assignments.npy"), self.assignments)
+        np.save(path.join(self.params["out_dir"], "assignments.npy"), self.assignments)
 
         print("Complete sampling")
 
