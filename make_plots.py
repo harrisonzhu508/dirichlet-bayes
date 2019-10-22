@@ -6,14 +6,22 @@ import numpy as np
 
 from src.plot import *
 
+parser = argparse.ArgumentParser()
+
+parser.add_argument('-r', '--results_dir', required=True)
+parser.add_argument('-b', '--burn_in', default=100, type=int)
+parser.add_argument('-t', '--thinning', default=10, type=int)
+
+args = parser.parse_args()
+
 # Load data from file
 results_dir = 'results/galaxy_N_1000_alpha_1.000_m0_20.000_s0_10.000_a0_2.000_b0_0.111'
-assignments = np.load(os.path.join(results_dir, 'assignments.npy'))
-mus, sigmas, weights = pickle.load(open(os.path.join(results_dir, 'chain_iter.pkl'), 'rb'))
+assignments = np.load(os.path.join(args.results_dir, 'assignments.npy'))
+mus, sigmas, weights = pickle.load(open(os.path.join(args.results_dir, 'chain_iter.pkl'), 'rb'))
 
 # Thin the samples to reduce correlation
-burn_in = 100
-thin_factor = 10
+burn_in = args.burn_in
+thin_factor = args.thinning
 
 assignments = assignments[burn_in::thin_factor]
 mus = mus[burn_in::thin_factor]
@@ -27,9 +35,9 @@ cluster_sizes = [np.unique(assignments[i, :], return_counts=True)[1] for i in ra
 
 num_clusters = np.array(list(map(lambda x: len(set(x)), assignments)))
 
-plot_co_occurance_matirx(assignments)
+plot_co_occurrence_matrix(assignments, file_dir=args.results_dir)
 
-plot_cluster_size_hist(assignments)
+plot_cluster_size_hist(assignments, file_dir=args.results_dir)
 
 # plot_cluster_params(mus, weights)
 

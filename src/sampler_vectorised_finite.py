@@ -9,8 +9,8 @@ from os import path
 logging.basicConfig(filename="logs/sampler_test.log", level=logging.DEBUG)
 
 
-class InfiniteNormalDirichlet:
-    """InfiniteDirichlet class
+class FiniteNormalDirichlet:
+    """FiniteDirichlet class
     Args:
 
         - params: dictionary containing the DP model parameters
@@ -19,7 +19,7 @@ class InfiniteNormalDirichlet:
     """
 
     def __str__(self):
-        print_str = "Infinite Dirichlet Mixture model with {} and initial parameters {}".format(
+        print_str = "Finite Dirichlet Mixture model with {} and initial parameters {}".format(
             self.params, self.hyperparam
         )
         return print_str
@@ -52,6 +52,7 @@ class InfiniteNormalDirichlet:
         """
         z_chain = np.zeros((steps + 1, self.n), dtype=int)
         self.assignments = z_chain
+        M = float(self.params['M'])
 
         for i in range(1, steps):
             if i % 50 == 0: print("MCMC Chain: {}".format(i))
@@ -118,7 +119,7 @@ class InfiniteNormalDirichlet:
                 K = len(old_unique)
 
                 # probability for each existing k cluster -> gives a vector of probabilities
-                p_old_cluster = old_counts * norm(
+                p_old_cluster = (old_counts + 1./M) * norm(
                     mu_new, sigma_new
                 ).pdf(self.data[j])
 
@@ -131,7 +132,7 @@ class InfiniteNormalDirichlet:
                         scale=1 / self.hyperparam["beta_0"],
                     )
                 )
-                p_new_cluster = self.params["alpha"] * norm(
+                p_new_cluster = (M-K)/M * self.params["alpha"] * norm(
                     mu_update, sigma_update
                 ).pdf(self.data[j])
                 # logging.debug(p_old_cluster)
