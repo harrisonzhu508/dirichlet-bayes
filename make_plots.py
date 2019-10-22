@@ -1,20 +1,24 @@
+import os
 import pickle
+import argparse
 
 import numpy as np
 
 from src.plot import *
 
 # Load data from file
-assignments = np.load('results/assignments.npy')
-mus, sigmas, weights = pickle.load(open('results/chain_iter.pkl', 'rb'))
+results_dir = 'results/galaxy_N_1000_alpha_1.000_m0_20.000_s0_10.000_a0_2.000_b0_0.111'
+assignments = np.load(os.path.join(results_dir, 'assignments.npy'))
+mus, sigmas, weights = pickle.load(open(os.path.join(results_dir, 'chain_iter.pkl'), 'rb'))
 
 # Thin the samples to reduce correlation
+burn_in = 100
 thin_factor = 10
 
-assignments = assignments[0::thin_factor]
-mus = mus[0::thin_factor]
-sigmas = sigmas[0::thin_factor]
-weights = sigmas[0::thin_factor]
+assignments = assignments[burn_in::thin_factor]
+mus = mus[burn_in::thin_factor]
+sigmas = sigmas[burn_in::thin_factor]
+weights = sigmas[burn_in::thin_factor]
 
 Nsamp = assignments.shape[0]
 nd = assignments.shape[1]

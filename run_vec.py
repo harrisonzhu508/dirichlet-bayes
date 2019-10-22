@@ -36,9 +36,11 @@ data = np.loadtxt("data/galaxy.txt")
 finiteDirichlet = InfiniteNormalDirichlet(parameters, hyperparameters, data)
 chain, assignments = finiteDirichlet.run_chain(args.num_samples)
 
-file_prefix = f'{os.path.splitext(os.path.basename(args.data))[0]}_N_{args.num_samples}_'
+file_name = f'{os.path.splitext(os.path.basename(args.data))[0]}_N_{args.num_samples}_alpha_{args.alpha:0.3f}_m0_{args.mu_0:0.3f}_s0_{args.sigma_0:0.3f}_a0_{args.alpha_0:0.3f}_b0_{args.beta_0:0.3f}'
 
-with open(os.path.join(args.outdir, file_prefix + "chain_iter.pkl"), "wb") as f:
+os.makedirs(os.path.join(args.outdir, file_name), exist_ok=True)
+
+with open(os.path.join(args.outdir, file_name, "chain_iter.pkl"), "wb") as f:
     pickle.dump(chain, f)
 
-np.save(os.path.join(args.outdir, file_prefix + "assignments.npy"), assignments)
+np.save(os.path.join(args.outdir, file_name, "assignments.npy"), assignments)
