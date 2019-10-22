@@ -35,10 +35,9 @@ class InfiniteNormalDirichlet:
         mu_chain = []
         sigma_chain = []
         weights = []
-        # some extra storage for assignment at each time step
-        # we index from 0! So with K clusters we have 0...K-1
-        # this has storage O(num_datapoints * num_samples)
-        z_chain = np.zeros((params["num_samples"] + 1, self.n), dtype=int)
+        ## some extra storage for assignment at each time step
+        ## we index from 0! So with K clusters we have 0...K-1
+        ## this has storage O(num_datapoints * num_samples)
 
         # place initial parameters values into chain
         # take crude averages and standard deviation!
@@ -47,11 +46,13 @@ class InfiniteNormalDirichlet:
         weights.append(self.params["alpha"])  # initially we have 1 cluster!
 
         self.chain = {"mu": mu_chain, "sigma": sigma_chain, "weights": weights}
-        self.assignments = z_chain
 
     def run_chain(self, steps=1):
         """Run a Gibbs sampler
         """
+        z_chain = np.zeros((steps + 1, self.n), dtype=int)
+        self.assignments = z_chain
+
         for i in range(1, steps):
             print("MCMC Chain: {}".format(i))
             # find the number of points in each clusters
