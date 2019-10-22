@@ -112,3 +112,5 @@ env
 .pyc
 .c
 *.pkl
+
+jobs/*
