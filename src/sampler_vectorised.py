@@ -57,7 +57,8 @@ class InfiniteNormalDirichlet:
             if i % 50 == 0: print("MCMC Chain: {}".format(i))
             # find the number of points in each clusters
             old_unique, old_counts = np.unique(
-                self.assignments[i - 1, :], return_counts=True)
+                self.assignments[i - 1, :], return_counts=True
+            )
             num_pts_clusters = dict(zip(old_unique, old_counts))
             # old_unique = list(old_unique)
 
@@ -73,8 +74,7 @@ class InfiniteNormalDirichlet:
 
             for k in old_unique:
                 num_pts_cluster = num_pts_clusters[k]
-                data_cluster = self.data[np.where(
-                    self.assignments[i - 1, :] == k)[0]]
+                data_cluster = self.data[np.where(self.assignments[i - 1, :] == k)[0]]
                 if num_pts_cluster > 0:
                     # now sample mu[k] given mu[-k], sigma and the partition
                     # see lecture 15 last slide calculations N(a, b) trick
@@ -88,8 +88,7 @@ class InfiniteNormalDirichlet:
                     )
                     a = b ** 2 * (
                         sum(data_cluster) / sigma_tmp ** 2
-                        + self.hyperparam["mu_0"] /
-                        self.hyperparam["sigma_0"] ** 2
+                        + self.hyperparam["mu_0"] / self.hyperparam["sigma_0"] ** 2
                     )
                     # update mu
                     mu_new[k] = normal(loc=a, scale=b)
@@ -101,7 +100,7 @@ class InfiniteNormalDirichlet:
                     )
 
                     # update sigma
-                    sigma_new[k] = 1. / np.sqrt(gamma(shape=c, scale=1 / d))
+                    sigma_new[k] = 1.0 / np.sqrt(gamma(shape=c, scale=1 / d))
 
             self.assignments[i, :] = self.assignments[i - 1, :].copy()
             # now, loop through all the datapoints to compute the new cluster probabilities
@@ -110,7 +109,8 @@ class InfiniteNormalDirichlet:
                 # TODO: this bit could definitely be taken out in the future, but i
                 # will just leave it for now
                 old_unique, old_counts = np.unique(
-                    self.assignments[i, :], return_counts=True)
+                    self.assignments[i, :], return_counts=True
+                )
 
                 old_cluster_assigned = int(self.assignments[i, j])
                 old_counts[old_cluster_assigned] -= 1
@@ -143,8 +143,7 @@ class InfiniteNormalDirichlet:
                 # select a new cluster!
                 # if we get K then new cluster!
                 # try:
-                cluster_pick = np.random.choice(
-                    K+1, p=prob_clusters)
+                cluster_pick = np.random.choice(K + 1, p=prob_clusters)
                 # except Exception as e:
                 #     logging.info("Iteration {}, datapoint {}".format(i, j))
                 #     logging.info("{}".format(sigma_new),
@@ -172,7 +171,9 @@ class InfiniteNormalDirichlet:
 
                 # remove empty clusters and their parameters
                 # now, sample the cluster weights!
-                if (old_counts[old_cluster_assigned] == 0) & (cluster_pick != old_cluster_assigned):
+                if (old_counts[old_cluster_assigned] == 0) & (
+                    cluster_pick != old_cluster_assigned
+                ):
                     mu_new = np.delete(mu_new, old_cluster_assigned)
                     sigma_new = np.delete(sigma_new, old_cluster_assigned)
 
@@ -181,8 +182,7 @@ class InfiniteNormalDirichlet:
 
             # update the weights
             weights_update = dirichlet(
-                alpha=self.params["alpha"]
-                + np.array(list(num_pts_clusters.values()))
+                alpha=self.params["alpha"] + np.array(list(num_pts_clusters.values()))
             )
             weights_new = weights_update.copy()
 
