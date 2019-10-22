@@ -53,8 +53,9 @@ class InfiniteNormalDirichlet:
         z_chain = np.zeros((steps + 1, self.n), dtype=int)
         self.assignments = z_chain
 
-        for i in range(1, steps):
-            if i % 50 == 0: print("MCMC Chain: {}".format(i))
+        for i in range(1, steps + 1):
+            if i % 50 == 0:
+                print("MCMC Chain: {}".format(i))
             # find the number of points in each clusters
             old_unique, old_counts = np.unique(
                 self.assignments[i - 1, :], return_counts=True
@@ -118,9 +119,7 @@ class InfiniteNormalDirichlet:
                 K = len(old_unique)
 
                 # probability for each existing k cluster -> gives a vector of probabilities
-                p_old_cluster = old_counts * norm(
-                    mu_new, sigma_new
-                ).pdf(self.data[j])
+                p_old_cluster = old_counts * norm(mu_new, sigma_new).pdf(self.data[j])
 
                 mu_update = normal(
                     loc=self.hyperparam["mu_0"], scale=self.hyperparam["sigma_0"]
@@ -180,10 +179,9 @@ class InfiniteNormalDirichlet:
                     ind = self.assignments[i, :] > (old_cluster_assigned)
                     self.assignments[i, ind] = self.assignments[i, ind] - 1
 
+            _, old_counts = np.unique(self.assignments[i, :], return_counts=True)
             # update the weights
-            weights_update = dirichlet(
-                alpha=self.params["alpha"] + np.array(list(num_pts_clusters.values()))
-            )
+            weights_update = dirichlet(alpha=self.params["alpha"] + old_counts)
             weights_new = weights_update.copy()
 
             self.chain["mu"].append(mu_new)
