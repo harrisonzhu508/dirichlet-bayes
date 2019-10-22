@@ -1,9 +1,11 @@
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from util.distributions import normal_mixture_likelihood
 
 # J - num samples
 # SS - subsample iterations
+# https://link.springer.com/content/pdf/10.1007%2Fs11634-018-0329-y.pdf
 
 
 def plot_co_occurrence_matrix(
@@ -66,23 +68,62 @@ def plot_cluster_size_hist(
     plt.savefig("{}/{}.png".format(file_dir, filename))
 
 
-def plot_cluster_params(mu_chain, weights_chain, file_dir="../results", filename="cluster_para"):
+def plot_cluster_params(
+    mu_chain, sigma_chain, weights_chain, file_dir="../results", filename="cluster_para"
+):
     """Plots x-y graph with x being the parameters and y being the weights
     we plot it with the colour representing the number of clusters
     
     """
 
-    mu_flat = np.concatenate(mu_chain).ravel()
+    mu_flat = np.concatenate(mu_chain)
+    sigma_flat = np.concatenate(sigma_chain)
     weights_flat = np.concatenate(weights_chain)
 
-    num_clusters = [len(mu) for mu in mus]
+    num_clusters = [len(mu_iter) for mu_iter in mu_chain]
     num_clusters = [np.ones(n) * n for n in num_clusters]
+    num_clusters = np.concatenate(num_clusters)
 
-    sns.scatterplot(vec_mus, vec_weights, hue=num_clusters)
-    plt.savefig("{}/{}.png".format(file_dir, filename))
+    plt.figure()
+    plt.scatter(
+        mu_flat, weights_flat, c=num_clusters, s=10, marker=".", edgecolors=None
+    )
+    plt.colorbar()
+    plt.title("weights again mu")
+    plt.xlabel("mu paramter")
+    plt.ylabel("weights")
+    plt.savefig("{}/mu-{}.eps".format(file_dir, filename), format="eps")
+
+    plt.figure()
+    plt.scatter(
+        sigma_flat, weights_flat, c=num_clusters, s=10, marker=".", edgecolors=None
+    )
+    plt.colorbar()
+    plt.title("weights again sigma")
+    plt.xlabel("sigma paramter")
+    plt.ylabel("weights")
+    plt.savefig("{}/sigma-{}.eps".format(file_dir, filename), format="eps")
 
 
 def plot_posterior_predictive(
-    mus, sigmas, weights, file_dir="../results", filename="cluster_size_hist"
+    mu_chain,
+    sigma_chain,
+    weights,
+    assignments,
+    file_dir="../results",
+    filename="cluster_size_hist",
 ):
-    pass
+    """Plots the posterior predictive distribution density
+
+    0. For each datapoint, we compute the average of all the paramters
+    1. For each datapoint, we compute the probability density
+    """
+    density = np.zeros(assignments.shape[1])
+    for i in range(assignments.shape[0]):
+        # get the parameters and weights
+        mu = mu_chain[i]
+        sigma = sigma_chain[i]
+        weight = weights[i]
+
+        normal_mixture_likelihood()
+

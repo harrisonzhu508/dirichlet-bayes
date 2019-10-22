@@ -93,7 +93,11 @@ for (j in 1:J) {
 
     #keeping the cluster labels packed (ie 1:K) is delicate
     #this was the hardest bit to get right
-    if (nSp[k]==0 & kn!=k) {ib=which(S>k); S[ib]=S[ib]-1; mu=mu[-k]; sg=sg[-k]}
+    if (nSp[k]==0 & kn!=k) {
+      ib=which(S>k) 
+      S[ib]=S[ib]-1 
+      mu=mu[-k]; sg=sg[-k]
+    }
   }  
 
   #collect samples from the MCMC every SS steps
