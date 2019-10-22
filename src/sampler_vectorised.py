@@ -70,7 +70,6 @@ class InfiniteNormalDirichlet:
             weights_old = self.chain["weights"][i - 1]
 
             for k in unique:
-                print("MCMC Chain: {}, Cluster loop: {}".format(i, k))
                 num_pts_cluster = num_pts_clusters[k]
                 data_cluster = self.data[np.where(self.assignments[i - 1, :] == k)[0]]
                 if num_pts_cluster > 0:
@@ -178,7 +177,7 @@ class InfiniteNormalDirichlet:
                 # remove empty clusters and their parameters
                 # now, sample the cluster weights!
                 if (cluster_assigned not in num_pts_clusters.keys()) & (
-                    cluster_pick != cluster_assigned
+                    cluster_pick - 1 != cluster_assigned
                 ):
                     mu_new = np.delete(mu_new, cluster_assigned)
                     sigma_new = np.delete(sigma_new, cluster_assigned)
@@ -215,4 +214,4 @@ if __name__ == "__main__":
     finiteDirichlet = InfiniteNormalDirichlet(
         INFINITE_NORMAL_PARAMS, INFINITE_NORMAL_HYPERPARAMETER, data
     )
-    finiteDirichlet.run_chain(100)
+    finiteDirichlet.run_chain(1000)

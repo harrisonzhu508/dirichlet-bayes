@@ -105,7 +105,7 @@ class InfiniteNormalDirichlet:
                 num_pts_clusters = dict(zip(unique, counts))
 
                 cluster_assigned = self.assignments[i, j].copy()
-                num_pts_clusters[cluster_assigned] += -1
+                num_pts_clusters[cluster_assigned] = num_pts_clusters[cluster_assigned] - 1
 
                 mu_chain = np.array(list(self.chain["mu"][i].values()))
                 sigma_chain = np.array(list(self.chain["sigma"][i].values()))
