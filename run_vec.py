@@ -12,7 +12,6 @@ parser.add_argument("-d", "--data", default="data/galaxy.txt", type=str)
 parser.add_argument("-o", "--outdir", default="results", type=str)
 
 parser.add_argument("-n", "--num_samples", default=1000, type=int)
-parser.add_argument("-m", "--M", default=1e6, type=int)
 parser.add_argument("-a", "--alpha", default=1.0, type=float)
 
 parser.add_argument("-m0", "--mu_0", default=20.0, type=float)
@@ -24,7 +23,7 @@ parser.add_argument("-s", "--seed", default=0, type=int)
 
 args = parser.parse_args()
 
-parameters = {"alpha": args.alpha, "M": args.M}
+parameters = {"alpha": args.alpha}
 
 hyperparameters = {
     "mu_0": args.mu_0,
@@ -41,10 +40,9 @@ chain, assignments = infiniteDirichlet.run_chain(args.num_samples)
 
 # file_name = f"{os.path.splitext(os.path.basename(args.data))[0]}_N_{args.num_samples}_M_{args.M}_alpha_{args.alpha:0.3f}_m0_{args.mu_0:0.3f}_s0_{args.sigma_0:0.3f}_a0_{args.alpha_0:0.3f}_b0_{args.beta_0:0.3f}"
 
-file_name = "{}_N_{}_M_{}_alpha_{:0.3f}_m0_{:0.3f}_s0_{:0.3f}_a0_{:0.3f}_b0_{:0.3f}".format(
+file_name = "{}_N_{}_alpha_{:0.3f}_m0_{:0.3f}_s0_{:0.3f}_a0_{:0.3f}_b0_{:0.3f}".format(
     os.path.splitext(os.path.basename(args.data))[0],
     args.num_samples,
-    args.M,
     args.alpha,
     args.mu_0,
     args.sigma_0,

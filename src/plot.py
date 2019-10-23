@@ -5,6 +5,10 @@ from src.util.distributions import normal_mixture_likelihood
 from matplotlib import rc
 rc('font',**{'family':'serif','serif':['Times']})
 rc('text', usetex=True)
+
+from matplotlib import cm
+cmap = viridis = cm.get_cmap('viridis', 100)
+
 # from src.util.distributions import normal_mixture_likelihood
 
 # J - num samples
@@ -127,38 +131,48 @@ def plot_posterior_predictive(
 
     TODO: this is super slow!!
     """
-    num_points = 200
+    num_points = 400
     x = np.linspace(0, 40, num_points)
-    num_clust_in_chain = list(map(lambda row: len(row)-1, mu_chain))
-    density = np.zeros((max(np.array(num_clust_in_chain)+1), num_points))
+    num_clust_in_chain = np.array(list(map(lambda row: len(row)-1, mu_chain)))
+    active_cluster_nums = np.max(num_clust_in_chain) - np.min(num_clust_in_chain) + 1
+    density = np.zeros([active_cluster_nums, num_points])
 
     # we also perform thinning
     for i in range(assignments.shape[0]):
         if i % 100 == 0:
             print(i)
         # get the parameters and weights
-        ind = num_clust_in_chain[i]
+        ind = num_clust_in_chain[i]-  np.min(num_clust_in_chain)
         apply_row = lambda x_elt,: normal_mixture_likelihood(
             x_elt, weights[i], mu_chain[i], sigma_chain[i]
         )
         density[ind, :] = density[ind, :] + np.exp(list(map(apply_row, x)))
 
-    counts = np.unique(assignments, return_counts=True)[1]
-    cumulative_density = density / counts[:, None]
-    post_density = np.sum(cumulative_density, axis=0) / assignments.shape[0]
+    counts = np.unique(num_clust_in_chain, return_counts=True)[1]
+    cumulative_density = density / np.atleast_2d(counts).T
+    post_density = np.sum(density, axis=0) / assignments.shape[0]
     
     plt.figure()
-    plt.plot(x, post_density)
+
+    for i, cluster in enumerate(range(np.min(num_clust_in_chain), np.max(num_clust_in_chain) + 1)):
+        plt.plot(x, cumulative_density[i, :], label='Density given K={}'.format(cluster))
+
+    plt.plot(x, post_density, label='Total density', color='k')
+
     plt.hist(
         data,
-        bins=x,
-        density=1
+        bins=np.linspace(0, 40, num_points/4),
+        density=1,
+        color='w',
+        edgecolor='black', 
+        linewidth=0.8
     )
+    
     plt.xlabel("Data point")
     plt.ylabel("Posterior density")
     plt.title("Posterior Predictive Plot")
-    plt.savefig("{}/{}.pdf".format(file_dir, filename))
-    plt.close()
+    plt.legend()
+    plt.savefig("{}/{}.pdf".format(file_dir, filename), format="pdf")
 
 if __name__ == "__main__":
     pass
