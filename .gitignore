@@ -114,6 +114,7 @@ env
 *.pkl
 *.eps
 jobs/*
+*.pdf
 
 dp.code-workspace
 *.zip
