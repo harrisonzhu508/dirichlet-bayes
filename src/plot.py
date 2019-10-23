@@ -1,7 +1,11 @@
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from util.distributions import normal_mixture_likelihood
+from src.util.distributions import normal_mixture_likelihood
+from matplotlib import rc
+rc('font',**{'family':'serif','serif':['Times']})
+rc('text', usetex=True)
+# from src.util.distributions import normal_mixture_likelihood
 
 # J - num samples
 # SS - subsample iterations
@@ -89,8 +93,8 @@ def plot_cluster_params(
         mu_flat, weights_flat, c=num_clusters, s=10, marker=".", edgecolors=None
     )
     plt.colorbar()
-    plt.title("weights again mu")
-    plt.xlabel("mu paramter")
+    plt.title("weights against mu")
+    plt.xlabel("mu parameter")
     plt.ylabel("weights")
     plt.savefig("{}/mu-{}.eps".format(file_dir, filename), format="eps")
 
@@ -99,31 +103,59 @@ def plot_cluster_params(
         sigma_flat, weights_flat, c=num_clusters, s=10, marker=".", edgecolors=None
     )
     plt.colorbar()
-    plt.title("weights again sigma")
-    plt.xlabel("sigma paramter")
+    plt.title("weights against sigma")
+    plt.xlabel("sigma parameter")
     plt.ylabel("weights")
     plt.savefig("{}/sigma-{}.eps".format(file_dir, filename), format="eps")
 
 
 def plot_posterior_predictive(
+    data,
     mu_chain,
     sigma_chain,
     weights,
     assignments,
     file_dir="../results",
-    filename="cluster_size_hist",
+    filename="posterior_predictive",
 ):
     """Plots the posterior predictive distribution density
 
-    0. For each datapoint, we compute the average of all the paramters
+    0. For each datapoint, we compute the average of all the parameters
     1. For each datapoint, we compute the probability density
+
+    TODO: this is super slow!!
     """
-    density = np.zeros(assignments.shape[1])
+    num_points = 200
+    x = np.linspace(0, 40, num_points)
+    num_clust_in_chain = list(map(lambda row: len(row)-1, mu_chain))
+    density = np.zeros((max(np.array(num_clust_in_chain)+1), num_points))
+
+    # we also perform thinning
     for i in range(assignments.shape[0]):
+        if i % 100 == 0:
+            print(i)
         # get the parameters and weights
-        mu = mu_chain[i]
-        sigma = sigma_chain[i]
-        weight = weights[i]
+        ind = num_clust_in_chain[i]
+        apply_row = lambda x_elt,: normal_mixture_likelihood(
+            x_elt, weights[i], mu_chain[i], sigma_chain[i]
+        )
+        density[ind, :] = density[ind, :] + np.exp(list(map(apply_row, x)))
 
-        normal_mixture_likelihood()
+    counts = np.unique(assignments, return_counts=True)[1]
+    cumulative_density = density / counts[:, None]
+    post_density = np.sum(cumulative_density, axis=0) / assignments.shape[0]
+    
+    plt.figure()
+    plt.plot(x, post_density)
+    plt.hist(
+        data,
+        bins=x,
+        density=1
+    )
+    plt.xlabel("Data point")
+    plt.ylabel("Posterior density")
+    plt.title("Posterior Predictive Plot")
+    plt.savefig("{}/{}.eps".format(file_dir, filename), format="eps")
 
+if __name__ == "__main__":
+    pass

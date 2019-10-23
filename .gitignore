@@ -112,6 +112,9 @@ env
 .pyc
 .c
 *.pkl
-
+*.eps
 jobs/*
 *.pdf
+
+dp.code-workspace
+*.zip
