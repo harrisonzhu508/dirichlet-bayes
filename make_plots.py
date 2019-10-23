@@ -8,9 +8,9 @@ from src.plot import *
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('-r', '--results_dir', default='results/finite/galaxy_N_10000_M_3_alpha_1.000_m0_20.000_s0_10.000_a0_2.000_b0_0.111')
+parser.add_argument('-r', '--results_dir', required=True)
 parser.add_argument('-b', '--burn_in', default=100, type=int)
-parser.add_argument('-t', '--thinning', default=100, type=int)
+parser.add_argument('-t', '--thinning', default=10, type=int)
 
 args = parser.parse_args()
 results_dir = args.results_dir 
