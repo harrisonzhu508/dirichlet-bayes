@@ -114,3 +114,4 @@ env
 *.pkl
 
 jobs/*
+*.pdf
