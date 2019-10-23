@@ -49,7 +49,7 @@ def plot_co_occurrence_matrix(
     plt.title("Co-occurrence matrix i.e. p(i,j) = prob i,j in same cluster")
     plt.ylabel("Datapoints")
     plt.xlabel("Datapoints")
-    plt.savefig("{}/{}.png".format(file_dir, filename))
+    plt.savefig("{}/{}.pdf".format(file_dir, filename))
 
 
 def plot_cluster_size_hist(
@@ -73,7 +73,7 @@ def plot_cluster_size_hist(
     plt.title("Histogram of the cluster occurrence")
     plt.xlabel("Cluster")
     plt.ylabel("Frequency")
-    plt.savefig("{}/{}.png".format(file_dir, filename))
+    plt.savefig("{}/{}.pdf".format(file_dir, filename))
 
 
 def plot_cluster_params(
@@ -100,7 +100,8 @@ def plot_cluster_params(
     plt.title("weights against mu")
     plt.xlabel("mu parameter")
     plt.ylabel("weights")
-    plt.savefig("{}/mu-{}.eps".format(file_dir, filename), format="eps")
+    plt.savefig("{}/mu-{}.pdf".format(file_dir, filename))
+    plt.close()
 
     plt.figure()
     plt.scatter(
@@ -110,7 +111,8 @@ def plot_cluster_params(
     plt.title("weights against sigma")
     plt.xlabel("sigma parameter")
     plt.ylabel("weights")
-    plt.savefig("{}/sigma-{}.eps".format(file_dir, filename), format="eps")
+    plt.savefig("{}/sigma-{}.pdf".format(file_dir, filename))
+    plt.close()
 
 
 def plot_posterior_predictive(
@@ -170,7 +172,7 @@ def plot_posterior_predictive(
     plt.ylabel("Posterior density")
     plt.title("Posterior Predictive Plot")
     plt.legend()
-    plt.savefig("{}/{}.eps".format(file_dir, filename), format="eps")
+    plt.savefig("{}/{}.pdf".format(file_dir, filename), format="pdf")
 
 if __name__ == "__main__":
     pass
