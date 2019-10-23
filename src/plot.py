@@ -1,7 +1,7 @@
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from util.distributions import normal_mixture_likelihood
+from src.util.distributions import normal_mixture_likelihood
 # from src.util.distributions import normal_mixture_likelihood
 
 # J - num samples
@@ -90,8 +90,8 @@ def plot_cluster_params(
         mu_flat, weights_flat, c=num_clusters, s=10, marker=".", edgecolors=None
     )
     plt.colorbar()
-    plt.title("weights again mu")
-    plt.xlabel("mu paramter")
+    plt.title("weights against mu")
+    plt.xlabel("mu parameter")
     plt.ylabel("weights")
     plt.savefig("{}/mu-{}.eps".format(file_dir, filename), format="eps")
 
@@ -100,8 +100,8 @@ def plot_cluster_params(
         sigma_flat, weights_flat, c=num_clusters, s=10, marker=".", edgecolors=None
     )
     plt.colorbar()
-    plt.title("weights again sigma")
-    plt.xlabel("sigma paramter")
+    plt.title("weights against sigma")
+    plt.xlabel("sigma parameter")
     plt.ylabel("weights")
     plt.savefig("{}/sigma-{}.eps".format(file_dir, filename), format="eps")
 
@@ -113,7 +113,7 @@ def plot_posterior_predictive(
     weights,
     assignments,
     file_dir="../results",
-    filename="cluster_size_hist",
+    filename="posterior_predictive",
 ):
     """Plots the posterior predictive distribution density
 
@@ -125,9 +125,11 @@ def plot_posterior_predictive(
     num_points = 200
     x = np.linspace(0, 40, num_points)
     num_clust_in_chain = list(map(lambda row: len(row)-1, mu_chain))
-    density = np.zeros((max(num_clust_in_chain), num_points))
-    for i in range(len(mu_chain)):
-        if i % 10 == 0:
+    density = np.zeros((max(np.array(num_clust_in_chain)+1), num_points))
+
+    # we also perform thinning
+    for i in range(assignments.shape[0]):
+        if i % 100 == 0:
             print(i)
         # get the parameters and weights
         ind = num_clust_in_chain[i]
@@ -136,21 +138,21 @@ def plot_posterior_predictive(
         )
         density[ind, :] = density[ind, :] + np.exp(list(map(apply_row, x)))
 
-    _, counts = np.unique(assignments, return_counts=True)[1]
+    counts = np.unique(assignments, return_counts=True)[1]
     cumulative_density = density / counts[:, None]
-    post_density = np.sum(cumulative_density, axis=1) / len(mu_chain)
-    # plt.figure()
-    # plt.plot(x, density)
-
-    return cumulative_density, post_density
+    post_density = np.sum(cumulative_density, axis=0) / assignments.shape[0]
+    
+    plt.figure()
+    plt.plot(x, post_density)
+    plt.hist(
+        data,
+        bins=x,
+        density=1
+    )
+    plt.xlabel("Data point")
+    plt.ylabel("Posterior density")
+    plt.title("Posterior Predictive Plot")
+    plt.savefig("{}/{}.eps".format(file_dir, filename), format="eps")
 
 if __name__ == "__main__":
-    data = np.loadtxt("/Users/harrisonzhu/Documents/work/code/dirichlet-bayes/data/galaxy.txt")
-    assignments = np.load("/Users/harrisonzhu/Documents/work/code/dirichlet-bayes/results/1000/galaxy_N_1000_assignments.npy")
-    import pickle
-    chain = pickle.load(open("/Users/harrisonzhu/Documents/work/code/dirichlet-bayes/results/1000/galaxy_N_1000_chain_iter.pkl", "rb"))    
-    mu = chain["mu"]
-    sigma = chain["sigma"]
-    weights = chain["weights"]  
-    np.random.seed(0)  
-    cumulative_density, post_density = plot_posterior_predictive(data, mu, sigma, weights, assignments)
+    pass
