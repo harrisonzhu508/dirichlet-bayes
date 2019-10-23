@@ -2,6 +2,9 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from src.util.distributions import normal_mixture_likelihood
+from matplotlib import rc
+rc('font',**{'family':'serif','serif':['Times']})
+rc('text', usetex=True)
 # from src.util.distributions import normal_mixture_likelihood
 
 # J - num samples
