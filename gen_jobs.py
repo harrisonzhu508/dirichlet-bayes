@@ -14,7 +14,7 @@ base_job = ['#!/bin/bash',
 
 for i, M in enumerate([3,6,10,20,50,1e2,1e3,1e4,1e5,1e10]):
     job = base_job.copy()
-    job[-1] = job[-1] + '-n 10000 -m {} -o {}'.format(M, cluster_storage)
+    job[-1] = job[-1] + '-n 10000 -m {} -o {}'.format(int(M), cluster_storage)
     job[1] = job[1] + '_{}'.format(i)
 
     with open(os.path.join(jobs_dir, 'job_{}'.format(i)), 'w') as f:
