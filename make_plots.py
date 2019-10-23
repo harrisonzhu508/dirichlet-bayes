@@ -50,5 +50,3 @@ plot_posterior_predictive(
     assignments,
     file_dir=results_dir
 )
-
-plt.show()
