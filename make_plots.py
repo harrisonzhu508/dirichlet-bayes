@@ -11,6 +11,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-r', '--results_dir', required=True)
 parser.add_argument('-b', '--burn_in', default=100, type=int)
 parser.add_argument('-t', '--thinning', default=10, type=int)
+parser.add_argument('-s', '--show', action='store_true')
 
 args = parser.parse_args()
 results_dir = args.results_dir 
@@ -39,11 +40,11 @@ cluster_sizes = [np.unique(assignments[i, :], return_counts=True)[1] for i in ra
 
 num_clusters = np.array(list(map(lambda x: len(set(x)), assignments)))
 
-# plot_co_occurrence_matrix(assignments, file_dir=results_dir)
+plot_co_occurrence_matrix(assignments, file_dir=results_dir)
 
-# plot_cluster_size_hist(assignments, file_dir=results_dir)
+plot_cluster_size_hist(assignments, file_dir=results_dir)
 
-# plot_cluster_params(mus, sigmas, weights, file_dir=results_dir)
+plot_cluster_params(mus, sigmas, weights, file_dir=results_dir)
 
 plot_posterior_predictive(
     data,
@@ -54,4 +55,5 @@ plot_posterior_predictive(
     file_dir=results_dir
 )
 
-plt.show()
+if args.show:
+    plt.show()

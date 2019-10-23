@@ -155,7 +155,7 @@ def plot_posterior_predictive(
     plt.figure()
 
     for i, cluster in enumerate(range(np.min(num_clust_in_chain), np.max(num_clust_in_chain) + 1)):
-        plt.plot(x, cumulative_density[i, :], label='Density given K={}'.format(cluster))
+        plt.plot(x, cumulative_density[i, :], label='Density given K={}'.format(cluster+1))
 
     plt.plot(x, post_density, label='Total density', color='k')
 
