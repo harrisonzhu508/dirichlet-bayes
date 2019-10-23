@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--data", default="data/galaxy.txt", type=str)
 parser.add_argument("-o", "--outdir", default="results", type=str)
 
-parser.add_argument("-n", "--num_samples", default=1000, type=int)
+parser.add_argument("-n", "--num_samples", default=10000, type=int)
 parser.add_argument("-m", "--M", default=1e6, type=int)
 parser.add_argument("-a", "--alpha", default=1.0, type=float)
 

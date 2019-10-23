@@ -50,7 +50,7 @@ class InfiniteNormalDirichlet:
     def run_chain(self, steps=1):
         """Run a Gibbs sampler
         """
-        z_chain = np.zeros((steps + 1, self.n), dtype=int)
+        z_chain = np.zeros((steps, self.n), dtype=int)
         self.assignments = z_chain
 
         for i in range(1, steps + 1):

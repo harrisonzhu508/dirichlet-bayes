@@ -50,7 +50,7 @@ class FiniteNormalDirichlet:
     def run_chain(self, steps=1):
         """Run a Gibbs sampler
         """
-        z_chain = np.zeros((steps + 1, self.n), dtype=int)
+        z_chain = np.zeros((steps, self.n), dtype=int)
         self.assignments = z_chain
         M = float(self.params['M'])
 
@@ -182,8 +182,11 @@ class FiniteNormalDirichlet:
                     self.assignments[i, ind] = self.assignments[i, ind] - 1
 
             # update the weights
+            _, counts = np.unique(
+                self.assignments[i, :], return_counts=True
+            )
             weights_update = dirichlet(
-                alpha=self.params["alpha"] + np.array(list(num_pts_clusters.values()))
+                alpha=self.params["alpha"] + counts
             )
             weights_new = weights_update.copy()
 
