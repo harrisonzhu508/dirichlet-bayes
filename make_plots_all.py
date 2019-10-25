@@ -8,6 +8,6 @@ for model in models:
     print(results)
     for result in results:
         print(result)
-        os.system("python make_plots.py -r {} -t 100".format(result))
+        os.system("python make_plots.py -r {} -t 10 -b 1000".format(result))
 
 print("DONE")

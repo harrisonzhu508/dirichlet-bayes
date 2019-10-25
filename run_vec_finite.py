@@ -35,7 +35,7 @@ hyperparameters = {
 
 np.random.seed(args.seed)
 
-data = np.loadtxt("data/galaxy.txt")
+data = np.loadtxt(args.data)
 finiteDirichlet = FiniteNormalDirichlet(parameters, hyperparameters, data)
 chain, assignments = finiteDirichlet.run_chain(args.num_samples)
 

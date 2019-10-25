@@ -53,7 +53,7 @@ class InfiniteNormalDirichlet:
         z_chain = np.zeros((steps, self.n), dtype=int)
         self.assignments = z_chain
 
-        for i in range(1, steps + 1):
+        for i in range(1, steps):
             if i % 50 == 0:
                 print("MCMC Chain: {}".format(i))
             # find the number of points in each clusters

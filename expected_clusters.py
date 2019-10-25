@@ -1,3 +1,6 @@
+import os
+import argparse
+
 import numpy as np
 import scipy.special as special
 
@@ -9,6 +12,21 @@ rc('font',**{'family':'serif','serif':['Times']})
 rc('text', usetex=True)
 
 cmap = viridis = cm.get_cmap('viridis', 100)
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-o", "--outdir", default="results", type=str)
+parser.add_argument("-a", "--alpha", default=1, type=float)
+parser.add_argument("-n", "--num_samples", default=100000, type=int)
+parser.add_argument('-ms', "--max_clusters", default=[5,10,50,100,1000,10000], nargs='+', type=int)
+parser.add_argument('-s', '--show', action='store_true')
+
+args = parser.parse_args()
+
+alpha = args.alpha
+n = args.num_samples
+ms = args.max_clusters
+outdir = args.outdir
 
 def expected_clusters_finite_exact(M, n, alpha):
     expected = np.zeros(n)
@@ -37,17 +55,12 @@ def expected_clusters_infinite_approx(n, alpha):
     return alpha * np.log(1 + (expected / alpha))
 
 
-alpha = 100
-n = 100000
-ms = [5,10,50,100,1000,10000]
-
 expected_clusters_exact = expected_clusters_infinite_exact(n, alpha)
 expected_clusters_approx = expected_clusters_infinite_approx(n, alpha)
 
 expected_clusters_finite_exact = [expected_clusters_finite_exact(m, n, alpha) for m in ms]
 
-
-# plt.plot(expected_clusters_approx, label='infinite approx')
+os.makedirs(outdir, exist_ok=True)
 
 plt.figure(figsize=(5, 3.5))
 
@@ -62,6 +75,7 @@ plt.xlabel('Number of observed data points')
 plt.ylabel('Expected number of clusters')
 plt.title(f' Expected number of clusters for $\\alpha$ = {alpha}')
 
-plt.savefig(f'figs/expected_alpha_{alpha}.pdf')
+plt.savefig(f'{outdir}/expected_alpha_{int(alpha)}.pdf')
 
-plt.show()
+if args.show:
+    plt.show()

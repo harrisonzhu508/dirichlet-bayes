@@ -140,7 +140,7 @@ def plot_posterior_predictive(
     # we also perform thinning
     for i in range(assignments.shape[0]):
         if i % 100 == 0:
-            print(i)
+            print('On sample {} of {} for plotting the posterior predictive distibution'.format(i, assignments.shape[0]))
         # get the parameters and weights
         ind = num_clust_in_chain[i]-  np.min(num_clust_in_chain)
         apply_row = lambda x_elt,: normal_mixture_likelihood(

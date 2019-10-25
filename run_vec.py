@@ -34,7 +34,7 @@ hyperparameters = {
 
 np.random.seed(args.seed)
 
-data = np.loadtxt("data/galaxy.txt")
+data = np.loadtxt(args.data)
 infiniteDirichlet = InfiniteNormalDirichlet(parameters, hyperparameters, data)
 chain, assignments = infiniteDirichlet.run_chain(args.num_samples)
 
