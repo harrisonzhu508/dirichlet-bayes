@@ -197,22 +197,3 @@ class FiniteNormalDirichlet:
         print("Complete sampling")
 
         return self.chain, self.assignments
-
-
-if __name__ == "__main__":
-    import os
-    import sys
-
-    sys.path.append(os.path.abspath("."))
-
-    import numpy as np
-    from scipy.stats import norm
-    from config.config import INFINITE_NORMAL_PARAMS, INFINITE_NORMAL_HYPERPARAMETER
-
-    np.random.seed(0)
-
-    data = np.loadtxt("data/galaxy.txt")
-    finiteDirichlet = InfiniteNormalDirichlet(
-        INFINITE_NORMAL_PARAMS, INFINITE_NORMAL_HYPERPARAMETER, data
-    )
-    finiteDirichlet.run_chain(10000)
