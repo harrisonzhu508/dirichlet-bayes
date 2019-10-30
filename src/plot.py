@@ -1,7 +1,7 @@
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from src.util.distributions import normal_mixture_likelihood
+from src.util.distributions import normal_mixture_likelihood_vector
 from matplotlib import rc
 rc('font',**{'family':'serif','serif':['Times']})
 rc('text', usetex=True)
@@ -143,10 +143,10 @@ def plot_posterior_predictive(
             print('On sample {} of {} for plotting the posterior predictive distibution'.format(i, assignments.shape[0]))
         # get the parameters and weights
         ind = num_clust_in_chain[i]-  np.min(num_clust_in_chain)
-        apply_row = lambda x_elt,: normal_mixture_likelihood(
-            x_elt, weights[i], mu_chain[i], sigma_chain[i]
-        )
-        density[ind, :] = density[ind, :] + np.exp(list(map(apply_row, x)))
+        # apply_row = lambda x_elt,: normal_mixture_likelihood(
+        #     x_elt, weights[i], mu_chain[i], sigma_chain[i]
+        # )
+        density[ind, :] = density[ind, :] + np.exp(normal_mixture_likelihood_vector(x, weights[i], mu_chain[i], sigma_chain[i])) # np.exp(list(map(apply_row, x)))
 
     counts = np.unique(num_clust_in_chain, return_counts=True)[1]
     cumulative_density = density / np.atleast_2d(counts).T

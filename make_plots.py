@@ -39,18 +39,23 @@ weights = weights[burn_in::thin_factor]
 Nsamp = assignments.shape[0]
 nd = assignments.shape[1]
 
-print('Making graphs for {} samples'.format(Nsamp))
+print('Making graphs for {}'.format(args))
+print(' using {} samples'.format(Nsamp))
 
 cluster_sizes = [np.unique(assignments[i, :], return_counts=True)[1] for i in range(Nsamp)]
 
 num_clusters = np.array(list(map(lambda x: len(set(x)), assignments)))
 
+print(' plotting co-occurance matrix')
 plot_co_occurrence_matrix(assignments, file_dir=results_dir)
 
+print(' plotting cluster size histogram')
 plot_cluster_size_hist(assignments, file_dir=results_dir)
 
+print(' plotting cluster parameters')
 plot_cluster_params(mus, sigmas, weights, file_dir=results_dir)
 
+print(' plotting posterior predictive')
 plot_posterior_predictive(
     data,
     mus,
